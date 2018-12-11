@@ -87,11 +87,17 @@ def get_angle_to_ball(ir_value):
         return None
     return (5 - ir_value)*30
 
+last_color_seen = 0 # black
 def get_angle_to_goal(gyro_value):
+    global last_color_seen
     green = color_sensor.rgb[1]
+    
     if green > config["color_white"]:
-    	pass
-    elif green > config["color_light_green"]:
+    	green = last_color_seen
+    else:
+        last_color_seen = green
+
+    if green > config["color_light_green"]:
     	gyro_value += config["offset_light_green"]
     elif green > config["color_medium_green"]:
     	gyro_value += config["offset_medium_green"]
