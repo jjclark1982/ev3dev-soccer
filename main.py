@@ -85,23 +85,20 @@ def strike(target=5):
 def get_angle_to_ball(ir_value):
     if ir_value == 0:
         return None
-    return (5 - ir_value)*15
+    return (5 - ir_value)*30
 
 def get_angle_to_goal(gyro_value):
-    # TODO: apply this wraparound AFTER the offset
-    gyro_angle = -((gyro_value + 180) % 360 - 180)
     green = color_sensor.rgb[1]
     if green > config["color_white"]:
-    	return gyro_angle
+    	pass
     elif green > config["color_light_green"]:
-    	return gyro_angle + config["offset_light_green"]
+    	gyro_value += config["offset_light_green"]
     elif green > config["color_medium_green"]:
-    	return gyro_angle + config["offset_medium_green"]
-    elif green > config["color_dark_green"]:
-    	return gyro_angle
+    	gyro_value += config["offset_medium_green"]
     else:
-        return gyro_angle
-    	
+        pass
+    gyro_angle = -((gyro_value + 180) % 360 - 180)
+    return gyro_angle    	
 
 def align_shot():
     angle_to_goal = get_angle_to_goal(gyro.value())
@@ -109,9 +106,8 @@ def align_shot():
     print("goal: {}, ball: {}, compass: {}, color: {}".format(
     	angle_to_goal, angle_to_ball, compass.value(), color_sensor.rgb))
     if angle_to_ball is None:
-        tank_drive.on(0,0)
-        return
-    if abs(angle_to_goal - angle_to_ball) < config["strike_angle"]:
+        brake()
+    elif abs(angle_to_goal - angle_to_ball) < config["strike_angle"]:
         print("striking")
         strike(5)
     elif angle_to_goal < angle_to_ball:
