@@ -72,12 +72,12 @@ def strike(target=5):
 		tank_drive.on(0,0)
 	elif ir.value() < target:
         # turn tighter when the angle to ball is larger
-        left = 75
-        right = 75 - 20*(target-ir.value())
+        left = config["curve_start"]
+        right = config["curve_start"] - config["curve_delta"]*(target-ir.value())
 		tank_drive.on(SpeedPercent(left), SpeedPercent(right))
 	elif ir.value() > target:
-        right = 75
-        left = 75 - 20*(ir.value()-target)
+        right = config["curve_start"]
+        left = config["curve_start"] - config["curve_delta"]*(ir.value()-target)
         tank_drive.on(SpeedPercent(left), SpeedPercent(right))
 	else:
 		tank_drive.on(100,100)
@@ -91,15 +91,15 @@ def get_angle_to_goal(gyro_value):
     # TODO: apply this wraparound AFTER the offset
     gyro_angle = -((gyro_value + 180) % 360 - 180)
     green = color_sensor.rgb[1]
-    if green > 150: # white
+    if green > config["color_white"]:
     	return gyro_angle
-    elif green > 128: # light green
-    	return gyro_angle + 30.0
-    elif green > 64: # medium green
-    	return gyro_angle - 30.0
-    elif green > 28: # dark green
+    elif green > config["color_light_green"]:
+    	return gyro_angle + config["offset_light_green"]
+    elif green > config["color_medium_green"]:
+    	return gyro_angle + config["offset_medium_green"]
+    elif green > config["color_dark_green"]:
     	return gyro_angle
-    else: # black
+    else:
         return gyro_angle
     	
 
@@ -111,13 +111,13 @@ def align_shot():
     if angle_to_ball is None:
         tank_drive.on(0,0)
         return
-    if abs(angle_to_goal - angle_to_ball) < 5:
+    if abs(angle_to_goal - angle_to_ball) < config["strike_angle"]:
         print("striking")
         strike(5)
     elif angle_to_goal < angle_to_ball:
-        strike(5.5) # curve left
+        strike(config["curve_left_sector"])
     else:
-        strike(4.5) # curve right
+        strike(config["curve_right_sector"])
 
 # Main Program
 
