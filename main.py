@@ -63,6 +63,8 @@ def brake():
 # Define Functions
 
 def calibrate_gyro():
+    brake()
+    time.sleep(0.1)
     gyro.mode = 'GYRO-CAL'
     time.sleep(0.1)
     gyro.mode = 'GYRO-ANG'
@@ -91,7 +93,7 @@ last_color_seen = 0 # black
 def get_angle_to_goal(gyro_value):
     global last_color_seen
     green = color_sensor.rgb[1]
-    
+
     if green > config["color_white"]:
     	green = last_color_seen
     else:
