@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
-from ev3dev2.motor import LargeMotor, OUTPUT_B, OUTPUT_C, SpeedPercent, MoveTank
+from ev3dev2.motor import LargeMotor, OUTPUT_B, OUTPUT_C, SpeedPercent, MoveTank, MoveSteering
 from ev3dev2.sensor import Sensor, list_sensors
 from ev3dev2.sensor.lego import TouchSensor, GyroSensor, ColorSensor
 from ev3dev2.led import Leds
 import time
 import atexit
-import json
-from datetime import datetime, timedelta
 
 # Set Up Devices
 
@@ -22,6 +20,7 @@ for s in list_sensors():
         color_sensor = ColorSensor(s.address)
 
 tank_drive = MoveTank(OUTPUT_B, OUTPUT_C)
+steer_drive = MoveSteering(OUTPUT_B, OUTPUT_C)
 leds = Leds()
 
 
@@ -38,16 +37,13 @@ def strike(target=5):
 	if ir.value() == 0:
 		tank_drive.on(0,0)
 	elif ir.value() < target:
-        # turn tighter when the angle to ball is larger
-        left = 75
-        right = 75 - 25*(target-ir.value())
-		tank_drive.on(SpeedPercent(left), SpeedPercent(right))
+        # turn right
+        steer_drive.on(50, SpeedPercent(75))
 	elif ir.value() > target:
-        right = 75
-        left = 75 - 25*(ir.value()-target)
-        tank_drive.on(SpeedPercent(left), SpeedPercent(right))
+        # turn left
+        steer_drive.on(-50, SpeedPercent(75))
 	else:
-		tank_drive.on(100,100)
+        steer_drive.on(0, SpeedPercent(100))
 
 def get_angle_to_ball(ir_value):
     if ir_value == 0:
