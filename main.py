@@ -24,36 +24,6 @@ for s in list_sensors():
 tank_drive = MoveTank(OUTPUT_B, OUTPUT_C)
 leds = Leds()
 
-config = {
-    "strike_angle": 5,
-
-    "curve_left_sector": 5.5,
-    "curve_right_sector": 4.5,
-    "curve_start": 75,
-    "curve_delta": 25,
-
-    "color_white": 150,
-    "color_light_green": 128,
-    "color_medium_green": 64,
-    "color_dark_green": 28,
-    "color_black": 0,
-
-    "offset_light_green": 30.0,
-    "offset_medium_green": -30.0
-}
-config_loaded_time = datetime.min # a long time ago
-
-def load_config(self, filename="config.json"):
-    global config, config_loaded_time
-    if datetime.now() - config_loaded_time > timedelta(0,1): # one second
-        config_loaded_time = datetime.now()
-        try:
-            with open(filename) as config_file:
-                new_config = json.load(config_file)
-                config.update(new_config)
-        except Exception as e:
-            print("Error loading config file:", e)
-
 # stop motors when program exits
 @atexit.register
 def brake():
@@ -74,12 +44,12 @@ def strike(target=5):
 		tank_drive.on(0,0)
 	elif ir.value() < target:
         # turn tighter when the angle to ball is larger
-        left = config["curve_start"]
-        right = config["curve_start"] - config["curve_delta"]*(target-ir.value())
+        left = 75
+        right = 75 - 25*(target-ir.value())
 		tank_drive.on(SpeedPercent(left), SpeedPercent(right))
 	elif ir.value() > target:
-        right = config["curve_start"]
-        left = config["curve_start"] - config["curve_delta"]*(ir.value()-target)
+        right = 75
+        left = 75 - 25*(ir.value()-target)
         tank_drive.on(SpeedPercent(left), SpeedPercent(right))
 	else:
 		tank_drive.on(100,100)
@@ -94,19 +64,21 @@ def get_angle_to_goal(gyro_value):
     global last_color_seen
     green = color_sensor.rgb[1]
 
-    if green > config["color_white"]:
+    if green > 150: # white
     	green = last_color_seen
     else:
         last_color_seen = green
 
-    if green > config["color_light_green"]:
-    	gyro_value += config["offset_light_green"]
-    elif green > config["color_medium_green"]:
-    	gyro_value += config["offset_medium_green"]
-    else:
+    if green > 128: # light green
+    	gyro_value += 30.0
+    elif green > 64: # medium green
+    	gyro_value += -30.0
+    elif green > 28: # dark green
+        pass
+    else: # black
         pass
     gyro_angle = -((gyro_value + 180) % 360 - 180)
-    return gyro_angle    	
+    return gyro_angle 	
 
 def align_shot():
     angle_to_goal = get_angle_to_goal(gyro.value())
@@ -115,25 +87,18 @@ def align_shot():
     	angle_to_goal, angle_to_ball, compass.value(), color_sensor.rgb))
     if angle_to_ball is None:
         brake()
-    elif abs(angle_to_goal - angle_to_ball) < config["strike_angle"]:
+    elif abs(angle_to_goal - angle_to_ball) < 5:
         print("striking")
         strike(5)
     elif angle_to_goal < angle_to_ball:
-        strike(config["curve_left_sector"])
+        strike(5.5)
     else:
-        strike(config["curve_right_sector"])
+        strike(4.5)
 
 # Main Program
 
 if __name__ == "__main__":
-    load_config()
     calibrate_gyro()
     while True:
-        load_config()
         align_shot()
         time.sleep(0.01)
-
-
-# TODO: automatically load configuration constants from a file
-# and watch that file for changes
-# https://stackoverflow.com/questions/3274334/how-can-i-watch-a-file-for-modification-change
