@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timedelta
 import atexit
 
-import update as program
+import main as program
 
 stat_time = datetime.now()
 old_mtime = os.path.getmtime(program.__file__)
