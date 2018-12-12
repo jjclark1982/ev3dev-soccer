@@ -24,16 +24,11 @@ for s in list_sensors():
 tank_drive = MoveTank(OUTPUT_B, OUTPUT_C)
 leds = Leds()
 
-# stop motors when program exits
-@atexit.register
-def brake():
-    tank_drive.on(0,0)
-
 
 # Define Functions
 
 def calibrate_gyro():
-    brake()
+    tank_drive.on(0,0)
     time.sleep(0.1)
     gyro.mode = 'GYRO-CAL'
     time.sleep(0.1)
@@ -80,13 +75,22 @@ def get_angle_to_goal(gyro_value):
     gyro_angle = -((gyro_value + 180) % 360 - 180)
     return gyro_angle 	
 
-def align_shot():
+# Lifecycle Handlers
+
+def start():
+    calibrate_gyro()
+
+def stop():
+    # stop motors when program exits
+    tank_drive.on(0,0)
+
+def update():
     angle_to_goal = get_angle_to_goal(gyro.value())
     angle_to_ball = get_angle_to_ball(ir.value())
     print("goal: {}, ball: {}, compass: {}, color: {}".format(
     	angle_to_goal, angle_to_ball, compass.value(), color_sensor.rgb))
     if angle_to_ball is None:
-        brake()
+        tank_drive.on(0,0)
     elif abs(angle_to_goal - angle_to_ball) < 5:
         print("striking")
         strike(5)
@@ -98,7 +102,7 @@ def align_shot():
 # Main Program
 
 if __name__ == "__main__":
-    calibrate_gyro()
+    atexit.register(stop)
+    start()
     while True:
-        align_shot()
-        time.sleep(0.01)
+        update()
