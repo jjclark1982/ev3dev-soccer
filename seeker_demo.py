@@ -28,8 +28,13 @@ tank_drive = MoveTank(OUTPUT_B, OUTPUT_C)
 # drive in a different turn for 3 seconds
 #tank_drive.on_for_seconds(SpeedPercent(60), SpeedPercent(30), 3)
 
+def start():
+    pass
 
-while True:
+def stop():
+    tank_drive.on(0,0)
+
+def update():
     if ir.value() < 5:
         tank_drive.on(SpeedPercent(75), SpeedPercent(25))
     elif ir.value() > 5:
@@ -38,5 +43,3 @@ while True:
         # in this case, ir.value() must be 5
         tank_drive.on(100,100)
     time.sleep(0.1)
-
-

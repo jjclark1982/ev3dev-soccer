@@ -71,6 +71,21 @@ def get_angle_to_goal(gyro_value):
     gyro_angle = -((gyro_value + 180) % 360 - 180)
     return gyro_angle 	
 
+def align_shot():
+    angle_to_goal = get_angle_to_goal(gyro.value())
+    angle_to_ball = get_angle_to_ball(ir.value())
+    print("goal: {}, ball: {}, compass: {}, color: {}".format(
+        angle_to_goal, angle_to_ball, compass.value(), color_sensor.rgb))
+    if angle_to_ball is None:
+        tank_drive.on(0,0)
+    elif abs(angle_to_goal - angle_to_ball) < 5:
+        print("striking")
+        strike(5)
+    elif angle_to_goal < angle_to_ball:
+        strike(5.5)
+    else:
+        strike(4.5)
+
 # Lifecycle Handlers
 
 def start():
@@ -81,19 +96,7 @@ def stop():
     tank_drive.on(0,0)
 
 def update():
-    angle_to_goal = get_angle_to_goal(gyro.value())
-    angle_to_ball = get_angle_to_ball(ir.value())
-    print("goal: {}, ball: {}, compass: {}, color: {}".format(
-    	angle_to_goal, angle_to_ball, compass.value(), color_sensor.rgb))
-    if angle_to_ball is None:
-        tank_drive.on(0,0)
-    elif abs(angle_to_goal - angle_to_ball) < 5:
-        print("striking")
-        strike(5)
-    elif angle_to_goal < angle_to_ball:
-        strike(5.5)
-    else:
-        strike(4.5)
+    align_shot()
 
 # Main Program
 
