@@ -13,7 +13,7 @@ for s in list_sensors():
     if s.driver_name == 'ht-nxt-compass':
         compass = s
     elif s.driver_name == 'lego-ev3-gyro':
-        gyro = GyroSensor(s.addres)
+        gyro = GyroSensor(s.address)
     elif s.driver_name == 'ht-nxt-ir-seek-v2':
         ir = s
     elif s.driver_name == 'lego-ev3-color':
