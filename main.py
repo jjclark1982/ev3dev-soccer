@@ -49,7 +49,7 @@ def strike(target=5):
 
 last_known_dir = 0
 def get_angle_to_ball(ir_value):
-	global last_known_dir
+    global last_known_dir
     if ir_value == 0:
         return None
     angle = (5 - ir_value)*30
