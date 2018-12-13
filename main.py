@@ -38,10 +38,12 @@ def strike(target=5):
         tank_drive.on(0,0)
     elif ir.value() < target:
         # turn right
-        steer_drive.on(50, SpeedPercent(75))
+        d = target - ir.value() # 0 to 5
+        steer_drive.on(15*d, SpeedPercent(75))
     elif ir.value() > target:
         # turn left
-        steer_drive.on(-50, SpeedPercent(75))
+        d = target - ir.value() # 0 to -5
+        steer_drive.on(15*d, SpeedPercent(75))
     else:
         steer_drive.on(0, SpeedPercent(100))
 
