@@ -34,15 +34,15 @@ def calibrate_gyro():
     gyro.mode = 'GYRO-ANG'
 
 def strike(target=5):
-	if ir.value() == 0:
-		tank_drive.on(0,0)
-	elif ir.value() < target:
+    if ir.value() == 0:
+        tank_drive.on(0,0)
+    elif ir.value() < target:
         # turn right
         steer_drive.on(50, SpeedPercent(75))
-	elif ir.value() > target:
+    elif ir.value() > target:
         # turn left
         steer_drive.on(-50, SpeedPercent(75))
-	else:
+    else:
         steer_drive.on(0, SpeedPercent(100))
 
 def get_angle_to_ball(ir_value):
@@ -56,20 +56,20 @@ def get_angle_to_goal(gyro_value):
     green = color_sensor.rgb[1]
 
     if green > 150: # white
-    	green = last_color_seen
+        green = last_color_seen
     else:
         last_color_seen = green
 
     if green > 128: # light green
-    	gyro_value += 30.0
+        gyro_value += 30.0
     elif green > 64: # medium green
-    	gyro_value += -30.0
+        gyro_value += -30.0
     elif green > 28: # dark green
         pass
     else: # black
         pass
     gyro_angle = -((gyro_value + 180) % 360 - 180)
-    return gyro_angle 	
+    return gyro_angle   
 
 def align_shot():
     angle_to_goal = get_angle_to_goal(gyro.value())
