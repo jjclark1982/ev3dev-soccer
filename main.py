@@ -47,10 +47,14 @@ def strike(target=5):
     else:
         steer_drive.on(0, SpeedPercent(100))
 
+last_known_dir = 0
 def get_angle_to_ball(ir_value):
+	global last_known_dir
     if ir_value == 0:
         return None
-    return (5 - ir_value)*30
+    angle = (5 - ir_value)*30
+    last_known_dir = angle
+    return angle
 
 last_color_seen = 0 # black
 def get_angle_to_goal(gyro_value):
@@ -79,7 +83,12 @@ def align_shot():
     print("goal: {}, ball: {}, compass: {}, color: {}".format(
         angle_to_goal, angle_to_ball, compass.value(), color_sensor.rgb))
     if angle_to_ball is None:
-        tank_drive.on(0,0)
+        if last_known_dir > 60:
+            steer_drive(100, 40)
+        elif last_known_dir < -60:
+            steer_drive(-100, 40)
+        else:
+            tank_drive.on(0,0)
     elif abs(angle_to_goal - angle_to_ball) < 5:
         print("striking")
         strike(5)
