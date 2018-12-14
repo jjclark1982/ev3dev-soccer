@@ -16,7 +16,7 @@ def reload_program():
         return
 
     stat_time = datetime.now()
-    new_mtime = (os.path.getmtime(program.__file__))
+    new_mtime = os.path.getmtime(program.__file__)
     if new_mtime > old_mtime:
         print("Change detected. Reloading {}".format(program.__file__))
         old_mtime = new_mtime
@@ -26,11 +26,11 @@ def reload_program():
             print(e)
 
 def stop():
-    if getattr(program, 'stop'):
+    if callable(getattr(program, 'stop')):
         program.stop()
 
 def run():
-    if getattr(program, 'start'):
+    if callable(getattr(program, 'start')):
         program.start()
     while True:
         reload_program()
