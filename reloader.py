@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 import atexit
 
 class Reloader:
-    '''Load a named Python module, and run its `update()` function
+    '''
+    Load a named Python module, and run its `update()` function
     continuously.
     Reload the module whenever its file is modified.
     If there are functions named `start()` or `stop()`, also run
@@ -67,7 +68,7 @@ class Reloader:
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description = Reloader.__doc__)
+    parser = argparse.ArgumentParser(description=Reloader.__doc__)
     parser.add_argument('filename', nargs='?', default='main.py',
         help='filename of the module to run (default: main.py)')
     args = parser.parse_args()
