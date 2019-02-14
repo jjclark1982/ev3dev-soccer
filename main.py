@@ -33,6 +33,16 @@ def calibrate_gyro():
     time.sleep(0.1)
     gyro.mode = 'GYRO-ANG'
 
+def calibrate_compass():
+    tank_drive.on(0,0)
+    time.sleep(0.1)
+    compass.command = 'BEGIN-CAL'
+    steer_drive.on(100, SpeedPercent(75))
+    while (gyro.value() < 360):
+        time.sleep(0.1)
+    tank_drive.on(0,0)
+    compass.command = 'END-CAL'
+
 def strike(target=5):
     if ir.value() == 0:
         tank_drive.on(0,0)
@@ -84,9 +94,9 @@ def align_shot():
         angle_to_goal, angle_to_ball, compass.value(), color_sensor.rgb))
     if angle_to_ball is None:
         if last_known_dir > 60:
-            steer_drive(100, 40)
+            steer_drive(100, SpeedPercent(40))
         elif last_known_dir < -60:
-            steer_drive(-100, 40)
+            steer_drive(-100, SpeedPercent(40))
         else:
             tank_drive.on(0,0)
     elif abs(angle_to_goal - angle_to_ball) < 5:
@@ -101,6 +111,7 @@ def align_shot():
 
 def start():
     calibrate_gyro()
+    calibrate_compass()
 
 def stop():
     # stop motors when program exits
