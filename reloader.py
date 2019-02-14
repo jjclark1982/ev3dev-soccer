@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-import importlib
-import os.path
 from datetime import datetime, timedelta
 import atexit
+import importlib
+import os.path
+import signal
+import sys
 
 class Reloader:
     '''
@@ -40,14 +42,21 @@ class Reloader:
             except Exception as e:
                 print(e)
 
-    def stop(self):
+    def stop(self, *args):
         '''
         Run the program's `stop()` function.
         This wrapper function will be called exactly once with the latest code,
         even if the program has been modified multiple times.
         '''
-        if callable(getattr(self.program, 'stop')):
+        if callable(getattr(self.program, 'stop', None)):
             self.program.stop()
+
+    def handle_signal(self, signo, frame=None):
+        signals = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
+            if v.startswith('SIG') and not v.startswith('SIG_'))
+
+        print("Received {}, stopping program.".format(signals[signo]))
+        sys.exit(0)
 
     def run(self):
         '''
@@ -57,7 +66,10 @@ class Reloader:
         Then run the `stop()` function once.
         '''
         atexit.register(self.stop)
-        if callable(getattr(self.program, 'start')):
+        signal.signal(signal.SIGINT,  self.handle_signal) # Handle Ctrl-C
+        signal.signal(signal.SIGTERM, self.handle_signal) # Handle `kill`
+        signal.signal(signal.SIGHUP,  self.handle_signal) # Handle disconnect
+        if callable(getattr(self.program, 'start', None)):
             self.program.start()
         while True:
             self.reload_program()
