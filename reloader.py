@@ -25,6 +25,15 @@ class Reloader:
         self.stat_time = datetime.now()
         self.old_mtime = os.path.getmtime(self.program.__file__)
 
+    def call_function(self, function_name):
+        '''
+        Call the named function of the managed program.
+        Do nothing if there is no function by that name.
+        '''
+        function = getattr(self.program, function_name, None)
+        if callable(function):
+            function()
+
     def reload_program(self):
         '''
         Reload the program if its file has been modified.
@@ -40,8 +49,7 @@ class Reloader:
             self.old_mtime = new_mtime
             try:
                 importlib.reload(self.program)
-                if callable(getattr(self.program, 'restart', None)):
-                    self.program.restart()
+                self.call_function('restart')
             except Exception as e:
                 print(e)
 
@@ -51,8 +59,7 @@ class Reloader:
         This wrapper function will be called exactly once with the latest code,
         even if the program has been modified multiple times.
         '''
-        if callable(getattr(self.program, 'stop', None)):
-            self.program.stop()
+        self.call_function('stop')
 
     def handle_signal(self, signo, frame=None):
         signals = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
@@ -72,12 +79,11 @@ class Reloader:
         signal.signal(signal.SIGINT,  self.handle_signal) # Handle Ctrl-C
         signal.signal(signal.SIGTERM, self.handle_signal) # Handle `kill`
         signal.signal(signal.SIGHUP,  self.handle_signal) # Handle disconnect
-        if callable(getattr(self.program, 'start', None)):
-            self.program.start()
+        self.call_function('start')
         while True:
             self.reload_program()
             try:
-                self.program.update()
+                self.call_function('update')
             except Exception as e:
                 print(e)
 
