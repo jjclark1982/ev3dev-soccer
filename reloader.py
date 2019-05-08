@@ -34,7 +34,7 @@ class Reloader:
 
         self.stat_time = datetime.now()
         new_mtime = os.path.getmtime(self.program.__file__)
-        if new_mtime > self.old_mtime:
+        if new_mtime != self.old_mtime:
             print("Change detected. Reloading {}".format(self.program.__file__))
             self.old_mtime = new_mtime
             try:
