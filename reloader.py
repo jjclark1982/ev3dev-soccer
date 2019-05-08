@@ -11,7 +11,8 @@ class Reloader:
     '''
     Load a named Python module, and run its `update()` function
     continuously.
-    Reload the module whenever its file is modified.
+    Reload the module whenever its file is modified, and call
+    a `restart()` function if it exists.
     If there are functions named `start()` or `stop()`, also run
     those once each at the beginning and end of the process.
 
@@ -39,6 +40,8 @@ class Reloader:
             self.old_mtime = new_mtime
             try:
                 importlib.reload(self.program)
+                if callable(getattr(self.program, 'restart', None)):
+                    self.program.restart()
             except Exception as e:
                 print(e)
 
