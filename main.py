@@ -4,6 +4,7 @@ from ev3dev2.motor import LargeMotor, OUTPUT_B, OUTPUT_C, SpeedPercent, MoveTank
 from ev3dev2.sensor import Sensor, list_sensors
 from ev3dev2.sensor.lego import TouchSensor, GyroSensor, ColorSensor
 from ev3dev2.led import Leds
+from ev3dev2.button import Button
 import time
 import atexit
 
@@ -22,6 +23,7 @@ for s in list_sensors():
 tank_drive = MoveTank(OUTPUT_B, OUTPUT_C)
 steer_drive = MoveSteering(OUTPUT_B, OUTPUT_C)
 leds = Leds()
+buttons = Button()
 
 
 # Define Functions
@@ -32,6 +34,7 @@ def calibrate_gyro():
     gyro.mode = 'GYRO-CAL'
     time.sleep(0.1)
     gyro.mode = 'GYRO-ANG'
+    return "calibrate_compass"
 
 def calibrate_compass():
     tank_drive.on(0,0)
@@ -42,6 +45,13 @@ def calibrate_compass():
         time.sleep(0.1)
     tank_drive.on(0,0)
     compass.command = 'END-CAL'
+    return "orient_toward_goal"
+
+compass_dir_to_goal = None
+def orient_toward_goal():
+    global compass_dir_to_goal
+    compass_dir_to_goal = compass.value()
+    return "look_for_ball"
 
 def strike(target=5):
     if ir.value() == 0:
@@ -56,6 +66,13 @@ def strike(target=5):
         steer_drive.on(15*d, SpeedPercent(75))
     else:
         steer_drive.on(0, SpeedPercent(100))
+    return "look_for_ball"
+
+def strike_left():
+    return strike(4.5)
+
+def strike_right():
+    return strike(5.5)
 
 last_known_dir = 0
 def get_angle_to_ball(ir_value):
@@ -85,40 +102,84 @@ def get_angle_to_goal(gyro_value):
     else: # black
         pass
     gyro_angle = -((gyro_value + 180) % 360 - 180)
-    return gyro_angle   
+    return gyro_angle
 
-def align_shot():
+def remember_left():
+    steer_drive.on(-100, SpeedPercent(40))
+    return "look_for_ball"
+
+def remember_right():
+    steer_drive.on(100, SpeedPercent(40))
+    return "look_for_ball"
+
+def pause():
+    steer_drive.off()
+    return "pause"
+
+def look_for_ball():
     angle_to_goal = get_angle_to_goal(gyro.value())
     angle_to_ball = get_angle_to_ball(ir.value())
-    print("goal: {}, ball: {}, compass: {}, color: {}".format(
-        angle_to_goal, angle_to_ball, compass.value(), color_sensor.rgb))
+    # print("goal: {}, ball: {}, compass: {}, color: {}".format(
+    #     angle_to_goal, angle_to_ball, compass.value(), color_sensor.rgb))
     if angle_to_ball is None:
         if last_known_dir > 60:
-            steer_drive(100, SpeedPercent(40))
+            return "remember_right"
         elif last_known_dir < -60:
-            steer_drive(-100, SpeedPercent(40))
+          return "remember_left"
         else:
             tank_drive.on(0,0)
     elif abs(angle_to_goal - angle_to_ball) < 5:
-        print("striking")
-        strike(5)
+        return "strike"
     elif angle_to_goal < angle_to_ball:
-        strike(5.5)
+        return "strike_right"
     else:
-        strike(4.5)
+        return "strike_left"
+    return "look_for_ball"
+
+override_handler = {
+    "up": "orient_toward_goal",
+    "down": "pause",
+    "left": None,
+    "right": None
+}
+state_handler = {
+    "calibrate_gyro": (calibrate_gyro, "AMBER", "AMBER"),
+    "calibrate_compass": (calibrate_compass, "AMBER", "AMBER"),
+    "orient_toward_goal": (orient_toward_goal, "AMBER", "AMBER"),
+    "look_for_ball": (look_for_ball, None, None),
+    "strike": (strike, "GREEN", "GREEN"),
+    "strike_left": (strike_left, "GREEN", (0,0)),
+    "strike_right": (strike_right, (0,0), "GREEN"),
+    "remember_left": (remember_left, "AMBER", (0,0)),
+    "remember_right": (remember_right, (0,0), "AMBER"),
+    "pause": (pause, (0,0), (0,0))
+}
+current_state = "calibrate_gyro"
 
 # Lifecycle Handlers
 
-def start():
-    calibrate_gyro()
-    calibrate_compass()
 
 def stop():
     # stop motors when program exits
     tank_drive.on(0,0)
 
 def update():
-    align_shot()
+    global current_state
+
+    if buttons.up:
+        current_state = override_handler["up"]
+
+    if buttons.down:
+        current_state = override_handler["down"]
+
+    print("Current state: "+current_state)
+    handler = state_handler[current_state]
+    if handler[1] is not None:
+        leds.set_color('LEFT', handler[1])
+    if handler[2] is not None:
+        leds.set_color('RIGHT', handler[2])
+    next_state = handler[0]()
+    current_state = next_state
 
 # Main Program
 
