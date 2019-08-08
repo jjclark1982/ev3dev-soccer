@@ -51,6 +51,7 @@ compass_dir_to_goal = None
 def orient_toward_goal():
     global compass_dir_to_goal
     compass_dir_to_goal = compass.value()
+    calibrate_gyro()
     return "look_for_ball"
 
 def strike(target=5):
@@ -117,10 +118,12 @@ def pause():
     return "pause"
 
 def look_for_ball():
-    angle_to_goal = get_angle_to_goal(gyro.value())
+    # angle_to_goal = get_angle_to_goal(gyro.value())
+    angle_to_goal = get_angle_to_goal(compass.value() - compass_dir_to_goal)
     angle_to_ball = get_angle_to_ball(ir.value())
-    # print("goal: {}, ball: {}, compass: {}, color: {}".format(
-    #     angle_to_goal, angle_to_ball, compass.value(), color_sensor.rgb))
+    print("goal: {}, gyro: {}, ball: {}, compass: {}, color: {} ".format(
+        angle_to_goal, gyro.value(), angle_to_ball, compass.value(), color_sensor.rgb),
+        end="", flush=True)
     if angle_to_ball is None:
         if last_known_dir > 60:
             return "remember_right"
