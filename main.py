@@ -25,7 +25,6 @@ steer_drive = MoveSteering(OUTPUT_B, OUTPUT_C)
 leds = Leds()
 buttons = Button()
 
-
 # Define Functions
 
 def calibrate_gyro():
@@ -117,6 +116,10 @@ def pause():
     steer_drive.off()
     return "pause"
 
+def back_off():
+
+    return "look_for_ball"
+
 def look_for_ball():
     # angle_to_goal = get_angle_to_goal(gyro.value())
     angle_to_goal = get_angle_to_goal(compass.value() - compass_dir_to_goal)
@@ -143,7 +146,8 @@ override_handler = {
     "up": "orient_toward_goal",
     "down": "pause",
     "left": None,
-    "right": None
+    "right": None,
+    "bump": "back_off"
 }
 state_handler = {
     "calibrate_gyro": (calibrate_gyro, "AMBER", "AMBER"),
@@ -155,7 +159,8 @@ state_handler = {
     "strike_right": (strike_right, (0,0), "GREEN"),
     "remember_left": (remember_left, "AMBER", (0,0)),
     "remember_right": (remember_right, (0,0), "AMBER"),
-    "pause": (pause, (0,0), (0,0))
+    "pause": (pause, (0,0), (0,0)),
+    "back_off": (back_off, "RED", "RED")
 }
 current_state = "calibrate_gyro"
 
